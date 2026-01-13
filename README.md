@@ -45,8 +45,8 @@
 docker run -d --name nginxpulse \
   -p 8088:8088 \
   -p 8089:8089 \
-  -e WEBSITES='[{"name":"主站","logPath":"/var/log/nginx/access.log","domains":["example.com","www.example.com"]}]' \
-  -v ./nginx_data/logs/all/access.log:/var/log/nginx/access.log:ro \
+  -e WEBSITES='[{"name":"主站","logPath":"/share/log/nginx/access.log","domains":["example.com","www.example.com"]}]' \
+  -v ./nginx_data/logs/all/access.log:/share/log/nginx/access.log:ro \
   -v "$(pwd)/var/nginxpulse_data:/app/var/nginxpulse_data" \
   magiccoders/nginxpulse:latest
 ```
@@ -58,8 +58,8 @@ docker build -t nginxpulse:local .
 docker run -d --name nginxpulse \
   -p 8088:8088 \
   -p 8089:8089 \
-  -e WEBSITES='[{"name":"主站","logPath":"/var/log/nginx/access.log","domains":["example.com","www.example.com"]}]' \
-  -v ./nginx_data/logs/all/access.log:/var/log/nginx/access.log:ro \
+  -e WEBSITES='[{"name":"主站","logPath":"/share/log/nginx/access.log","domains":["example.com","www.example.com"]}]' \
+  -v ./nginx_data/logs/all/access.log:/share/log/nginx/access.log:ro \
   -v "$(pwd)/var/nginxpulse_data:/app/var/nginxpulse_data" \
   nginxpulse:local
 ```
@@ -91,9 +91,9 @@ services:
       - "8088:8088"
       - "8089:8089"
     environment:
-      WEBSITES: '[{"name":"主站","logPath":"/var/log/nginx/access.log","domains":["example.com","www.example.com"]}]'
+      WEBSITES: '[{"name":"主站","logPath":"/share/log/nginx/access.log","domains":["example.com","www.example.com"]}]'
     volumes:
-      - ./nginx_data/logs/all/access.log:/var/log/nginx/access.log:ro
+      - ./nginx_data/logs/all/access.log:/share/log/nginx/access.log:ro
       - ./var/nginxpulse_data:/app/var/nginxpulse_data
       - /etc/localtime:/etc/localtime:ro
     restart: unless-stopped
@@ -113,9 +113,9 @@ services:
       - "8088:8088"
       - "8089:8089"
     environment:
-      WEBSITES: '[{"name":"主站","logPath":"/var/log/nginx/access.log","domains":["example.com","www.example.com"]}]'
+      WEBSITES: '[{"name":"主站","logPath":"/share/log/nginx/access.log","domains":["example.com","www.example.com"]}]'
     volumes:
-      - ./nginx_data/logs/all/access.log:/var/log/nginx/access.log:ro
+      - ./nginx_data/logs/all/access.log:/share/log/nginx/access.log:ro
       - ./var/nginxpulse_data:/app/var/nginxpulse_data
       - /etc/localtime:/etc/localtime:ro
     restart: unless-stopped
