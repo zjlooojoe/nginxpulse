@@ -1,0 +1,25 @@
+@use 'sass:map';
+
+$breakpoints: (
+  xl: 1280px,
+  lg: 1024px,
+  md: 768px,
+  sm: 640px,
+  xs: 520px
+);
+
+@mixin respond($size) {
+  $value: map.get($breakpoints, $size);
+  @if $value {
+    @media (max-width: $value) {
+      @content;
+    }
+  }
+}
+
+@mixin card-surface($radius: var(--card-radius), $shadow: var(--shadow-soft)) {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: $radius;
+  box-shadow: $shadow;
+}

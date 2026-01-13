@@ -1,0 +1,35 @@
+{
+  "websites": [
+    {
+      "name": "神奇的程序员",
+      "logPath": "var/log/access.log",
+      "domains": ["www.kaisir.cn", "kaisir.cn"]
+    }
+  ],
+  "system": {
+    "logDestination": "file",
+    "taskInterval": "1m"
+  },
+  "server": {
+    "Port": ":8089"
+  },
+  "pvFilter": {
+    "statusCodeInclude": [
+      200
+    ],
+    "excludePatterns": [
+      "favicon.ico$",
+      "robots.txt$",
+      "sitemap.xml$",
+      "\\.(?:js|css|jpg|jpeg|png|gif|svg|webp|woff|woff2|ttf|eot|ico)$",
+      "^/api/",
+      "^/ajax/",
+      "^/health$",
+      "^/_(?:nuxt|next)/",
+      "rss.xml$",
+      "feed.xml$",
+      "atom.xml$"
+    ],
+    "excludeIPs": ["127.0.0.1", "::1", "10.10.0.1", "192.168.30.21"]
+  }
+}
