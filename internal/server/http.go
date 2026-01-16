@@ -40,10 +40,11 @@ func buildRouter(statsFactory *analytics.StatsFactory, logParser *ingest.LogPars
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
 		AllowMethods:     []string{"GET", "POST"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", accessKeyHeader},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 	}))
+	router.Use(accessKeyMiddleware())
 
 	web.SetupRoutes(router, statsFactory, logParser)
 

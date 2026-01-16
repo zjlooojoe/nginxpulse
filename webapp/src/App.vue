@@ -51,15 +51,38 @@
       </div>
       <RouterView />
     </main>
+
+    <div v-if="accessKeyRequired" class="access-gate">
+      <div class="access-card">
+        <div class="access-title">需要访问密钥</div>
+        <div class="access-sub">请输入配置的访问密钥后继续使用 NginxPulse。</div>
+        <form class="access-form" @submit.prevent="submitAccessKey">
+          <input
+            v-model="accessKeyInput"
+            class="access-input"
+            type="password"
+            autocomplete="current-password"
+            placeholder="输入访问密钥"
+          />
+          <button class="access-submit" type="submit" :disabled="accessKeySubmitting">
+            {{ accessKeySubmitting ? '验证中...' : '进入系统' }}
+          </button>
+        </form>
+        <div v-if="accessKeyError" class="access-error">{{ accessKeyError }}</div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, provide, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue';
 import { RouterLink, RouterView, useRoute } from 'vue-router';
 import { fetchAppStatus } from '@/api';
 
 const route = useRoute();
+
+const ACCESS_KEY_STORAGE = 'nginxpulse_access_key';
+const ACCESS_KEY_EVENT = 'nginxpulse:access-key-required';
 
 const sidebarLabel = computed(() => (route.meta.sidebarLabel as string) || '');
 const sidebarHint = computed(() => (route.meta.sidebarHint as string) || '');
@@ -71,6 +94,10 @@ const isDark = ref(localStorage.getItem('darkMode') === 'true');
 const parsingActive = ref(false);
 const liveVisitorCount = ref<number | null>(null);
 const demoMode = ref(false);
+const accessKeyRequired = ref(false);
+const accessKeySubmitting = ref(false);
+const accessKeyInput = ref(localStorage.getItem(ACCESS_KEY_STORAGE) || '');
+const accessKeyError = ref('');
 
 const applyTheme = (value: boolean) => {
   if (value) {
@@ -91,6 +118,11 @@ const toggleTheme = () => {
 onMounted(() => {
   applyTheme(isDark.value);
   refreshAppStatus();
+  window.addEventListener(ACCESS_KEY_EVENT, handleAccessKeyEvent);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener(ACCESS_KEY_EVENT, handleAccessKeyEvent);
 });
 
 watch(isDark, (value) => {
@@ -116,8 +148,37 @@ async function refreshAppStatus() {
   try {
     const status = await fetchAppStatus();
     demoMode.value = Boolean(status.demo_mode);
+    accessKeyRequired.value = false;
+    accessKeyError.value = '';
   } catch (error) {
-    console.error('获取系统状态失败:', error);
+    const message = error instanceof Error ? error.message : '请求失败';
+    if (message.includes('密钥')) {
+      accessKeyRequired.value = true;
+      accessKeyError.value = message;
+    } else {
+      console.error('获取系统状态失败:', error);
+    }
+  }
+}
+
+function handleAccessKeyEvent(event: Event) {
+  const detail = (event as CustomEvent<{ message?: string }>).detail;
+  accessKeyRequired.value = true;
+  accessKeyError.value = detail?.message || '需要访问密钥';
+}
+
+async function submitAccessKey() {
+  const value = accessKeyInput.value.trim();
+  if (!value) {
+    accessKeyError.value = '请输入访问密钥';
+    return;
+  }
+  accessKeySubmitting.value = true;
+  localStorage.setItem(ACCESS_KEY_STORAGE, value);
+  try {
+    await refreshAppStatus();
+  } finally {
+    accessKeySubmitting.value = false;
   }
 }
 
@@ -165,5 +226,88 @@ const liveVisitorText = computed(() =>
   color: inherit;
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+
+.access-gate {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.35);
+  backdrop-filter: blur(10px);
+  z-index: 50;
+}
+
+.access-card {
+  width: min(420px, 100%);
+  background: var(--panel);
+  border-radius: 22px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  padding: 28px;
+  text-align: center;
+}
+
+.access-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.access-sub {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 18px;
+}
+
+.access-form {
+  display: grid;
+  gap: 12px;
+}
+
+.access-input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+}
+
+.access-input:focus {
+  border-color: rgba(var(--primary-color-rgb), 0.6);
+  box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.15);
+}
+
+.access-submit {
+  border: none;
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: var(--shadow-soft);
+}
+
+.access-submit:hover {
+  transform: translateY(-1px);
+}
+
+.access-submit:disabled {
+  cursor: default;
+  opacity: 0.75;
+  transform: none;
+}
+
+.access-error {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--error-color);
 }
 </style>

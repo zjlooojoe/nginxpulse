@@ -9,7 +9,9 @@
   "system": {
     "logDestination": "file",
     "taskInterval": "1m",
-    "demoMode": false
+    "logRetentionDays": 30,
+    "demoMode": false,
+    "accessKeys": []
   },
   "server": {
     "Port": ":8089"

@@ -19,6 +19,7 @@ const (
 	envPVExcludePatterns = "PV_EXCLUDE_PATTERNS"
 	envPVExcludeIPs      = "PV_EXCLUDE_IPS"
 	envDemoMode          = "DEMO_MODE"
+	envAccessKeys        = "ACCESS_KEYS"
 )
 
 var (
@@ -41,6 +42,7 @@ var (
 		TaskInterval:     "1m",
 		LogRetentionDays: 30,
 		DemoMode:         false,
+		AccessKeys:       nil,
 	}
 	defaultServer = ServerConfig{
 		Port: ":8089",
@@ -132,6 +134,14 @@ func applyEnvOverrides(cfg *Config) error {
 			return fmt.Errorf("解析 %s 失败: %w", key, err)
 		}
 		cfg.System.DemoMode = parsed
+	}
+
+	if raw, key := getEnvValue(envAccessKeys); raw != "" {
+		values, err := parseStringSliceFlexible(raw)
+		if err != nil {
+			return fmt.Errorf("解析 %s 失败: %w", key, err)
+		}
+		cfg.System.AccessKeys = values
 	}
 
 	if raw, _ := getEnvValue(envServerPort); raw != "" {
