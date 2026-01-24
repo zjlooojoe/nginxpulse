@@ -397,19 +397,21 @@ body.dark-mode .sidebar-footer {
 .main-content.logs-page .logs-table-wrapper {
     flex: 1;
     min-height: 0;
-    overflow: auto;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .main-content.logs-page .logs-table {
     flex: 1;
-    min-height: 320px;
+    min-height: 0;
     display: flex;
     flex-direction: column;
 }
 
 .main-content.logs-page .logs-table .p-datatable-wrapper {
     flex: 1;
-    min-height: 320px;
+    min-height: 0;
 }
 
 

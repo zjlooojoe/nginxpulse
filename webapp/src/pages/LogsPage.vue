@@ -137,10 +137,17 @@
 
     <div class="card logs-table-box">
       <div class="logs-table-wrapper">
+        <div v-if="loading" class="logs-table-overlay" role="status" aria-live="polite">
+          <div class="logs-table-overlay-card">
+            <span class="logs-table-overlay-spinner" aria-hidden="true"></span>
+            <span>{{ t('common.loading') }}</span>
+          </div>
+        </div>
         <DataTable
           class="logs-table"
           :value="logs"
-          :loading="loading"
+          scrollable
+          scrollHeight="flex"
           :resizableColumns="true"
           columnResizeMode="fit"
           :rowHover="true"
@@ -149,9 +156,6 @@
           :tableStyle="{ minWidth: '1200px' }"
           @row-click="openLogDetail"
         >
-          <template #loading>
-            <div class="logs-table-loading">{{ t('common.loading') }}</div>
-          </template>
           <Column field="time" :header="t('logs.time')" :style="{ width: '180px' }">
             <template #body="{ data }">
               <span :title="data.time">{{ data.time }}</span>
@@ -1252,10 +1256,13 @@ function nextPage() {
 }
 
 .logs-table-wrapper {
-  overflow: auto;
+  overflow: hidden;
   width: 100%;
   flex: 1;
   min-height: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
   border-radius: 14px;
   border: 1px solid var(--border);
   background: var(--panel);
@@ -1264,6 +1271,18 @@ function nextPage() {
 .logs-table {
   background: transparent;
   border: none;
+  flex: 1;
+  min-height: 0;
+}
+
+.logs-table :deep(.p-datatable-wrapper) {
+  flex: 1;
+  min-height: 0;
+}
+
+.logs-table :deep(.p-datatable-table-container) {
+  flex: 1;
+  min-height: 0;
 }
 
 .logs-table :deep(.p-datatable-table) {
@@ -1312,10 +1331,49 @@ function nextPage() {
   background-color: rgba(var(--primary-color-rgb), 0.2);
 }
 
-.logs-table-loading {
-  padding: 14px 16px;
+.logs-table-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--panel) 75%, transparent);
+  backdrop-filter: blur(1px);
+}
+
+:global(body.dark-mode) .logs-table-overlay {
+  background: color-mix(in srgb, var(--panel) 70%, transparent);
+}
+
+.logs-table-overlay-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-soft);
   color: var(--muted);
   font-size: 13px;
+  font-weight: 600;
+}
+
+.logs-table-overlay-spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(var(--primary-color-rgb), 0.25);
+  border-top-color: var(--primary);
+  animation: logs-spin 0.8s linear infinite;
+}
+
+@keyframes logs-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .logs-pv-cell {
