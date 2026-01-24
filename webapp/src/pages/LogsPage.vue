@@ -1464,6 +1464,32 @@ function nextPage() {
   font-weight: 600;
 }
 
+@media (max-width: 1800px) {
+  .control-row {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+  }
+
+  .search-box {
+    width: 100%;
+    flex-wrap: nowrap;
+    min-width: 0;
+    flex: 0 0 auto;
+  }
+
+  .search-input {
+    min-width: 160px;
+  }
+
+  .filter-row-fields {
+    margin-left: 0;
+    justify-content: flex-start;
+    flex: 0 0 auto;
+    width: 100%;
+  }
+}
+
 @media (max-width: 900px) {
   .logs-control-content {
     align-items: stretch;
@@ -1475,6 +1501,7 @@ function nextPage() {
 
   .search-box {
     width: 100%;
+    flex-wrap: wrap;
   }
 
   .filter-row-fields {
