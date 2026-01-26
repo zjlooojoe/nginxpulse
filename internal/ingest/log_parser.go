@@ -1511,7 +1511,8 @@ func buildRegexFromFormat(format string) (string, error) {
 		builder.WriteString(regexp.QuoteMeta(literal))
 
 		varName := format[loc[0]+1 : loc[1]]
-		builder.WriteString(tokenRegexForVar(varName, usedNames))
+		quoted := isQuotedTokenBoundary(literal, format[loc[1]:])
+		builder.WriteString(tokenRegexForVar(varName, usedNames, quoted))
 		last = loc[1]
 	}
 	builder.WriteString(regexp.QuoteMeta(format[last:]))
@@ -1519,7 +1520,7 @@ func buildRegexFromFormat(format string) (string, error) {
 	return "^" + builder.String() + "$", nil
 }
 
-func tokenRegexForVar(name string, used map[string]bool) string {
+func tokenRegexForVar(name string, used map[string]bool, quoted bool) string {
 	addGroup := func(group, pattern string) string {
 		if used[group] {
 			return pattern
@@ -1530,24 +1531,31 @@ func tokenRegexForVar(name string, used map[string]bool) string {
 
 	commaListPattern := `[^,\s]+(?:,\s*[^,\s]+)*`
 	optionalTokenPattern := `\S*`
+	optionalQuotedPattern := `[^"]*`
+	requiredTokenPattern := `\S+`
+	requiredQuotedPattern := `[^"]+`
+	if quoted {
+		optionalTokenPattern = optionalQuotedPattern
+		requiredTokenPattern = requiredQuotedPattern
+	}
 
 	switch name {
 	case "remote_addr":
-		return addGroup("ip", `\S+`)
+		return addGroup("ip", requiredTokenPattern)
 	case "http_x_forwarded_for":
 		return addGroup("http_x_forwarded_for", commaListPattern)
 	case "remote_user":
-		return addGroup("user", `\S+`)
+		return addGroup("user", optionalTokenPattern)
 	case "time_local":
 		return addGroup("time", `[^]]+`)
 	case "time_iso8601":
-		return addGroup("time", `\S+`)
+		return addGroup("time", requiredTokenPattern)
 	case "request":
-		return addGroup("request", `[^"]+`)
+		return addGroup("request", requiredTokenPattern)
 	case "request_method":
-		return addGroup("method", `\S+`)
+		return addGroup("method", requiredTokenPattern)
 	case "request_uri", "uri":
-		return addGroup("url", `\S+`)
+		return addGroup("url", requiredTokenPattern)
 	case "args":
 		return addGroup("args", optionalTokenPattern)
 	case "query_string":
@@ -1557,15 +1565,15 @@ func tokenRegexForVar(name string, used map[string]bool) string {
 	case "body_bytes_sent", "bytes_sent":
 		return addGroup("bytes", `\d+`)
 	case "http_referer":
-		return addGroup("referer", `[^"]*`)
+		return addGroup("referer", optionalTokenPattern)
 	case "http_user_agent":
-		return addGroup("ua", `[^"]*`)
+		return addGroup("ua", optionalTokenPattern)
 	case "host":
-		return addGroup("host", `\S+`)
+		return addGroup("host", requiredTokenPattern)
 	case "server_name":
-		return addGroup("server_name", `\S+`)
+		return addGroup("server_name", requiredTokenPattern)
 	case "scheme":
-		return addGroup("scheme", `\S+`)
+		return addGroup("scheme", requiredTokenPattern)
 	case "request_length":
 		return addGroup("request_length", `\d+`)
 	case "remote_port":
@@ -1581,8 +1589,17 @@ func tokenRegexForVar(name string, used map[string]bool) string {
 	case "upstream_header_time":
 		return addGroup("upstream_header_time", commaListPattern)
 	default:
-		return `\S+`
+		return optionalTokenPattern
 	}
+}
+
+func isQuotedTokenBoundary(prefix, suffix string) bool {
+	prefixTrim := strings.TrimRight(prefix, " \t\r\n")
+	if !strings.HasSuffix(prefixTrim, "\"") {
+		return false
+	}
+	suffixTrim := strings.TrimLeft(suffix, " \t\r\n")
+	return strings.HasPrefix(suffixTrim, "\"")
 }
 
 func validateLogPattern(indexMap map[string]int) error {
